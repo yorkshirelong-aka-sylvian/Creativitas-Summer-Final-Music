@@ -1,0 +1,293 @@
+/* Assignment 2th Aug 2025
+   Author: Michael Zixi Zhou
+*/
+//look in the console for the MIDI port for Wifiduino, and Tiny USB
+//it will probably be MIDI input 1, but maybe not!
+setMidiInput(1)
+setMidiOutput(1)
+
+//OPTIONAL: messages to control incoming midi data
+//limit rate of cc messages
+// sendCC(10, 3) //sets 10ms limit
+// sendCC(110, 50) //sets accelX smoothing
+// sendCC(111, 30) //sets accelY smoothing
+// sendCC(112, 50) //sets accelZ smoothing
+//sendCC(127, 50) //software reset
+
+/*
+  Someone in the Dark
+  Composed and Coded by Michael Zixi Zhou
+  For Robin v2.0
+*/
+
+let verb = new Reverb()
+
+Theory.tempo = 70.5
+Theory.keyType = 'minor'
+Theory.root = 'c'
+let flt = new Polyphony(Twinkle, 4)
+let mel = new Polyphony(Twinkle, 3)
+let chd = new Polyphony(Twinkle, 4)
+let str = new Polyphony(Twinkle, 4)
+let bass = new Twinkle()
+let output = new Tone.Gain(5).toDestination()
+
+//load drum
+const drum = new DrumSampler()
+const output = new Tone.Multiply(.1).toDestination()
+
+//connection
+flt.initGui()
+flt.connect(output)
+mel.initGui()
+mel.connect(output)
+chd.initGui()
+chd.connect(output)
+str.initGui()
+str.connect(output)
+bass.initGui()
+bass.connect(output)
+drum.initGui()
+drum.loadPreset('default')
+drum.listPresets()
+drum.connect(output)
+verb.connect(output)
+verb.initGui()
+
+
+let stop = ()=>{
+  drum.stop()
+  flt.stop()
+  mel.stop()
+  str.stop()
+  chd.stop()
+  bass.stop()
+}
+
+flt.stop()
+
+mel.stop()
+//flt loops
+flt.sequence('[. 7] 8 10 [9 8] [. 7] . . .]', '8n')
+//flt properties
+flt.sustainTime = 0.7
+flt.release = 0.8
+flt.presets = 'flute'
+flt.octave = 2
+
+
+flt.stop()
+str.stop()
+//mel loops
+mel.sequence('0 0 0 [1 2] . . . [2 2] [4 4] [4 4] [4 3] [2 1] . . . . 0 0 0 [1 2] . . . [2 2] [3 3] [3 3] [3 2] [3 1] . . . .', '8n',1)
+mel.sequence('7 7 7 [8 9] . . . [9 9] [11 11] [11 11] [11 10] [9 8] . . . . 7 7 7 [8 9] . . . [9 9] [10 10] [10 10] [10 9] [10 8] . . . .', '8n',2)
+mel.sequence('0 0 0 [1 2] . . . [2 2] [4 4] [4 4] [4 3] [2 1] [. 4] [3 2] [3 2] [0 -1] 0 0 0 [1 2] . . . [2 2] [-2 -2] [-2 -2] [-2 -2] [-2 -3] [. 4] [3 2] [3 2] [0 -1]', '8n', 3)
+//mel properties
+mel.octave = 1
+mel.cutoff = 1000
+mel.Q = 2
+mel.envDepth = 3200
+mel.attack =0.03
+mel.decay = 0.4
+mel.sustainTime = 0.5
+mel.release = 0.25
+
+
+//chd loops
+chd.sequence('0 -1 -2 -3', '2n ', 0)
+chd.sequence('2 2 0 0b', '2n ', 1)
+chd.sequence('4 4 2 1', '2n ', 2)
+chd.sequence('7 6 5 4', '2n ', 3)
+//chd properties (tri)
+chd.type = 'triangle'
+chd.octave = 1
+chd.attack = 0.007
+chd.decay = 0.7
+chd.sustainTime = 1
+chd.release = 1
+chd.cutoff = 10000
+chd.Q = 2.5
+chd.envDepth = 3000
+
+mel.stop()
+flt.stop()
+//str loops
+str.sequence('. -3 0 1 2 . . 0 -3 . . . -4 . . . . -3 0 1 2 . . 3 2 . . 0 1 . . .', '8n' ,0)
+str.sequence('. 4 7 8 9 . . 7 4 . . . 3 . . . . 4 7 8 9 . . 10 9 . . 7 8 . . .', '8n' ,1)
+//str properties (Tri)
+str.type = 'triangle'
+str.octave = 2
+str.cutoff = 2400
+str.Q = 2
+str.envDepth = 3200
+str.attack = 0.06
+str.decay = 1
+str.sustainTime = 1
+str.release = 1
+
+//bass loops
+bass.sequence('0 0 [. 0] 0 -1 -1[. -1] -1 -2 -2 [. -2] -2 -3 -3 [. -3] -3')
+//bass properties
+bass.type = 'sawtooth'
+bass.octave = 0
+bass.cutoff = 420
+bass.Q = 0.2
+bass.envDepth = 440
+bass.attack = 0.02
+bass.decay = 0.25
+bass.sustainTime = 0.4
+bass.release = 0.5
+
+
+//drum loop
+drum.sequence('[O O] [1 O] [O 1] [O O]', '8n')
+drum.sequence('[* O] [* O] [O *] [O O]', '8n', 2)
+//drum properties
+drum.output = 10
+
+drum.stop()
+//stops
+flt.stop()
+mel.stop()
+str.stop()
+chd.stop()
+bass.stop()
+
+stop()
+
+
+setNoteOnHandler((note)=>{
+  console.log('on', note)
+  if (note == 1) {
+    //drum loop
+    drum.sequence('[O O] [1 O] [O 1] [O O]', '8n')
+    drum.sequence('[* O] [* O] [O *] [O O]', '8n', 2)
+    //drum properties
+    drum.output = 10
+  }
+  if (note == 2) {
+    //bass loops
+    bass.sequence('0 0 [. 0] 0 -1 -1[. -1] -1 -2 -2 [. -2] -2 -3 -3 [. -3] -3')
+    //bass properties
+    bass.type = 'sawtooth'
+    bass.octave = 0
+    bass.cutoff = 420
+    bass.Q = 0.2
+    bass.envDepth = 440
+    bass.attack = 0.02
+    bass.decay = 0.25
+    bass.sustainTime = 0.4
+    bass.release = 0.5
+  }
+  if (note == 3) {
+    //chd loops
+    chd.sequence('0 -1 -2 -3', '2n ', 0)
+    chd.sequence('2 2 0 0b', '2n ', 1)
+    chd.sequence('4 4 2 1', '2n ', 2)
+    chd.sequence('7 6 5 4', '2n ', 3)
+    //chd properties (tri)
+    chd.type = 'triangle'
+    chd.octave = 1
+    chd.attack = 0.007
+    chd.decay = 0.7
+    chd.sustainTime = 1
+    chd.release = 1
+    chd.cutoff = 10000
+    chd.Q = 2.5
+    chd.envDepth = 3000
+    mel.stop()
+    //flt loops
+    flt.sequence('[. 7] 8 10 [9 8] [. 7] . . .]', '8n')
+    //flt properties
+    flt.sustainTime = 0.7
+    flt.release = 0.8
+    flt.presets = 'flute'
+    flt.octave = 2
+  }
+  if (note == 4) {
+    mel.stop()
+    flt.stop()
+    //str loops
+    str.sequence('. -3 0 1 2 . . 0 -3 . . . -4 . . . . -3 0 1 2 . . 3 2 . . 0 1 . . .', '8n' ,0)
+    str.sequence('. 4 7 8 9 . . 7 4 . . . 3 . . . . 4 7 8 9 . . 10 9 . . 7 8 . . .', '8n' ,1)
+    //str properties (Tri)
+    str.type = 'triangle'
+    str.octave = 2
+    str.cutoff = 2400
+    str.Q = 2
+    str.envDepth = 3200
+    str.attack = 0.06
+    str.decay = 1
+    str.sustainTime = 1
+    str.release = 1
+  }
+  if (note == 5) {
+    flt.stop()
+    str.stop()
+    //mel loops
+    mel.sequence('0 0 0 [1 2] . . . [2 2] [4 4] [4 4] [4 3] [2 1] . . . . 0 0 0 [1 2] . . . [2 2] [3 3] [3 3] [3 2] [3 1] . . . .', '8n',1)
+    mel.sequence('7 7 7 [8 9] . . . [9 9] [11 11] [11 11] [11 10] [9 8] . . . . 7 7 7 [8 9] . . . [9 9] [10 10] [10 10] [10 9] [10 8] . . . .', '8n',2)
+    mel.sequence('0 0 0 [1 2] . . . [2 2] [4 4] [4 4] [4 3] [2 1] [. 4] [3 2] [3 2] [0 -1] 0 0 0 [1 2] . . . [2 2] [-2 -2] [-2 -2] [-2 -2] [-2 -3] [. 4] [3 2] [3 2] [0 -1]', '8n', 3)
+    //mel properties
+    mel.octave = 1
+    mel.cutoff = 1000
+    mel.Q = 2
+    mel.envDepth = 3200
+    mel.attack =0.03
+    mel.decay = 0.4
+    mel.sustainTime = 0.5
+    mel.release = 0.25
+  }
+  if (note == 0) {
+    stop()
+  }
+})
+//
+setNoteOffHandler((note)=>{
+  console.log('off', note)
+  if (note == 1){
+    drum.stop()
+  }
+  if (note == 2){
+    bass.stop()
+  }
+  if (note == 3){
+    chd.stop()
+    flt.stop()
+  }
+  if (note == 5){
+    mel.stop()
+    flt.sequence('[. 7] 8 10 [9 8] [. 7] . . .]', '8n')
+  }
+})
+setCCHandler((num, val)=>{
+  if(num == 10) console.log(num, val)
+  switch(num){
+    case 10:
+      ax.add(val)
+      break;
+    case 11:
+      ay.add(val)
+      break;
+    case 12:
+      az.add(val)
+      break;
+    case 20:
+      mel.cutoff = val/127*5000
+      bass.cutoff = val/127*10000
+      chd.cutoff = val/127*8000
+      roll.add(val)
+      break;
+    case 21:
+      pitch.add(val)
+      break;
+    case 22:
+      yaw.add(val)
+      break;
+    case 30:
+      magnitude.add(val)
+      break;
+  }
+})
+
+stop()
